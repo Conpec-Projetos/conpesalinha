@@ -15,29 +15,22 @@ import {
 
 import { ReservationForm } from "@/components/forms/ReservationForm";
 import { ReservationCard } from "@/components/layout/ReservationCard";
-import { useReservations } from "@/hooks/useReservations";
+import { useTodayReservations } from "@/hooks/useReservations";
 
 export function Dashboard() {
-  const { reservations: allReservations, loading, error, refetch } = useReservations();
-
-  // Memoize today's date to avoid recreating it on every render
-  const today = useMemo(() => new Date(), []);
-
-  // Memoize filtered reservations to avoid recalculating on every render
-  const todayReservations = useMemo(() => {
-    return allReservations.filter((reservation) => {
-      const resDate = reservation.startTime.toDate();
-      return (
-        resDate.getDate() === today.getDate() &&
-        resDate.getMonth() === today.getMonth() &&
-        resDate.getFullYear() === today.getFullYear()
-      );
-    });
-  }, [allReservations, today]);
+  const { 
+    todayReservations, 
+    totalReservationsCount, 
+    loading, 
+    error, 
+    refetch 
+  } = useTodayReservations();
 
   // Memoize filtered reservations by room and time
   const roomData = useMemo(() => {
     const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
     
     const salinhaReservations = todayReservations.filter(r => r.room === "salinha");
     const sedeReservations = todayReservations.filter(r => r.room === "sede");
@@ -49,8 +42,13 @@ export function Dashboard() {
       const upcoming = salinhaReservations
         .filter((r) => r.startTime.toDate() > now)
         .sort((a, b) => a.startTime.toDate().getTime() - b.startTime.toDate().getTime());
+      // Only show past reservations that started today and have already ended
       const past = salinhaReservations
-        .filter((r) => r.endTime.toDate() < now)
+        .filter((r) => 
+          r.startTime.toDate() >= todayStart && 
+          r.startTime.toDate() <= todayEnd && 
+          r.endTime.toDate() < now
+        )
         .sort((a, b) => b.startTime.toDate().getTime() - a.startTime.toDate().getTime());
       return { current, upcoming, past, todayCount: salinhaReservations.length };
     };
@@ -62,8 +60,13 @@ export function Dashboard() {
       const upcoming = sedeReservations
         .filter((r) => r.startTime.toDate() > now)
         .sort((a, b) => a.startTime.toDate().getTime() - b.startTime.toDate().getTime());
+      // Only show past reservations that started today and have already ended
       const past = sedeReservations
-        .filter((r) => r.endTime.toDate() < now)
+        .filter((r) => 
+          r.startTime.toDate() >= todayStart && 
+          r.startTime.toDate() <= todayEnd && 
+          r.endTime.toDate() < now
+        )
         .sort((a, b) => b.startTime.toDate().getTime() - a.startTime.toDate().getTime());
       return { current, upcoming, past, todayCount: sedeReservations.length };
     };
@@ -79,7 +82,6 @@ export function Dashboard() {
   };
 
   // Calculate stats
-  const totalReservations = allReservations.length;
   const todayCount = todayReservations.length;
 
   return (
@@ -206,7 +208,7 @@ export function Dashboard() {
               <CalendarIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalReservations}</div>
+              <div className="text-2xl font-bold">{totalReservationsCount}</div>
               <p className="text-xs text-muted-foreground">
                 Todas as reservas
               </p>

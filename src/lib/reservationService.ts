@@ -8,6 +8,8 @@ import {
   query,
   orderBy,
   Timestamp,
+  where,
+  getCountFromServer,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { Reservation, CreateReservationData, UpdateReservationData } from "@/types/reservation";
@@ -67,6 +69,65 @@ export class ReservationService {
       }
       
       throw new Error("Failed to fetch reservations. Please try again.");
+    }
+  }
+
+  /**
+   * Get reservations for a specific date with optimized Firestore query
+   */
+  static async getReservationsByDateOptimized(date: Date): Promise<Reservation[]> {
+    try {
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      // Use optimized query to fetch only today's reservations
+      const q = query(
+        collection(db, COLLECTION_NAME),
+        where("startTime", ">=", Timestamp.fromDate(startOfDay)),
+        where("startTime", "<=", Timestamp.fromDate(endOfDay)),
+        orderBy("startTime", "asc")
+      );
+      
+      const querySnapshot = await getDocs(q);
+      
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Reservation[];
+    } catch (error) {
+      console.error("Error fetching reservations by date (optimized):", error);
+      
+      // More specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes("permission-denied")) {
+          throw new Error("Database access denied. Please check Firebase security rules.");
+        }
+        if (error.message.includes("unavailable")) {
+          throw new Error("Database is temporarily unavailable. Please try again.");
+        }
+        if (error.message.includes("network")) {
+          throw new Error("Network error. Please check your internet connection.");
+        }
+      }
+      
+      throw new Error("Failed to fetch reservations. Please try again.");
+    }
+  }
+
+  /**
+   * Get total count of all reservations efficiently
+   */
+  static async getTotalReservationsCount(): Promise<number> {
+    try {
+      const q = query(collection(db, COLLECTION_NAME));
+      const snapshot = await getCountFromServer(q);
+      return snapshot.data().count;
+    } catch (error) {
+      console.error("Error getting total reservations count:", error);
+      throw new Error("Failed to get reservations count");
     }
   }
 
