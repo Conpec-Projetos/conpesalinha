@@ -144,7 +144,7 @@ export function DateTimePicker(props: DateTimePickerProps) {
               variant="outline"
               size="sm"
               onClick={handleNow}
-              className="flex-1"
+              className="flex-1 cursor-pointer"
             >
               Agora
             </Button>
@@ -152,7 +152,7 @@ export function DateTimePicker(props: DateTimePickerProps) {
               variant="outline"
               size="sm"
               onClick={handleClear}
-              className="flex-1"
+              className="flex-1 cursor-pointer"
             >
               Limpar
             </Button>

@@ -229,11 +229,12 @@ export function EditReservationForm({ reservation, onSuccess, trigger }: EditRes
             <Button
               type="button"
               variant="outline"
+              className="cursor-pointer"
               onClick={handleCancel}
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} className="cursor-pointer">
               {isSubmitting ? "Atualizando..." : "Atualizar Reserva"}
             </Button>
           </div>

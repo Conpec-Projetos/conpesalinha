@@ -85,7 +85,7 @@ export function ReservationCard({
                 reservation={reservation}
                 onSuccess={onUpdate}
                 trigger={
-                  <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+                  <Button size="sm" variant="outline" className="h-8 w-8 p-0 cursor-pointer">
                     <Edit2 className="h-3 w-3" />
                     <span className="sr-only">Editar reserva</span>
                   </Button>
@@ -96,7 +96,7 @@ export function ReservationCard({
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                    className="h-8 w-8 p-0 text-destructive hover:text-destructive cursor-pointer"
                   >
                     <Trash2 className="h-3 w-3" />
                     <span className="sr-only">Excluir reserva</span>

@@ -339,12 +339,12 @@ export function Dashboard() {
               {error || "Não foi possível conectar ao banco de dados"}
             </p>
             <div className="space-x-2">
-              <Button onClick={handleRefresh} variant="outline">
+              <Button onClick={handleRefresh} className="cursor-pointer" variant="outline">
                 Tentar Novamente
               </Button>
               <ReservationForm 
                 onSuccess={handleRefresh}
-                trigger={<Button>Continuar Mesmo Assim</Button>}
+                trigger={<Button className="cursor-pointer">Continuar Mesmo Assim</Button>}
               />
             </div>
           </div>
@@ -369,7 +369,7 @@ export function Dashboard() {
             <ReservationForm 
               onSuccess={handleRefresh}
               trigger={
-                <Button>
+                <Button className="cursor-pointer">
                   <Plus className="mr-2 h-4 w-4" />
                   Fazer Primeira Reserva
                 </Button>

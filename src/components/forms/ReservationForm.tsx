@@ -210,11 +210,12 @@ export function ReservationForm({ onSuccess, trigger }: ReservationFormProps) {
             <Button
               type="button"
               variant="outline"
+              className="cursor-pointer"
               onClick={() => setOpen(false)}
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} className="cursor-pointer">
               {isSubmitting ? "Criando..." : "Criar Reserva"}
             </Button>
           </div>
