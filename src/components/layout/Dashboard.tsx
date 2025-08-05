@@ -6,74 +6,96 @@ import { CalendarIcon, Plus, Users, MapPin } from "lucide-react";
 import { useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { ReservationForm } from "@/components/forms/ReservationForm";
 import { ReservationCard } from "@/components/layout/ReservationCard";
 import { useTodayReservations } from "@/hooks/useReservations";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function Dashboard() {
-  const { 
-    todayReservations, 
-    totalReservationsCount, 
-    loading, 
-    error, 
-    refetch 
-  } = useTodayReservations();
+  const { todayReservations, loading, error, refetch } = useTodayReservations();
 
   // Memoize filtered reservations by room and time
   const roomData = useMemo(() => {
     const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
-    
-    const salinhaReservations = todayReservations.filter(r => r.room === "salinha");
-    const sedeReservations = todayReservations.filter(r => r.room === "sede");
-    
+    const todayStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+    const todayEnd = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      23,
+      59,
+      59
+    );
+
+    const salinhaReservations = todayReservations.filter(
+      (r) => r.room === "salinha"
+    );
+    const sedeReservations = todayReservations.filter((r) => r.room === "sede");
+
     const getSalinhaData = () => {
       const current = salinhaReservations.find(
         (r) => r.startTime.toDate() <= now && r.endTime.toDate() >= now
       );
       const upcoming = salinhaReservations
         .filter((r) => r.startTime.toDate() > now)
-        .sort((a, b) => a.startTime.toDate().getTime() - b.startTime.toDate().getTime());
+        .sort(
+          (a, b) =>
+            a.startTime.toDate().getTime() - b.startTime.toDate().getTime()
+        );
       // Only show past reservations that started today and have already ended
       const past = salinhaReservations
-        .filter((r) => 
-          r.startTime.toDate() >= todayStart && 
-          r.startTime.toDate() <= todayEnd && 
-          r.endTime.toDate() < now
+        .filter(
+          (r) =>
+            r.startTime.toDate() >= todayStart &&
+            r.startTime.toDate() <= todayEnd &&
+            r.endTime.toDate() < now
         )
-        .sort((a, b) => b.startTime.toDate().getTime() - a.startTime.toDate().getTime());
-      return { current, upcoming, past, todayCount: salinhaReservations.length };
+        .sort(
+          (a, b) =>
+            b.startTime.toDate().getTime() - a.startTime.toDate().getTime()
+        );
+      return {
+        current,
+        upcoming,
+        past,
+        todayCount: salinhaReservations.length,
+      };
     };
-    
+
     const getSedeData = () => {
       const current = sedeReservations.find(
         (r) => r.startTime.toDate() <= now && r.endTime.toDate() >= now
       );
       const upcoming = sedeReservations
         .filter((r) => r.startTime.toDate() > now)
-        .sort((a, b) => a.startTime.toDate().getTime() - b.startTime.toDate().getTime());
+        .sort(
+          (a, b) =>
+            a.startTime.toDate().getTime() - b.startTime.toDate().getTime()
+        );
       // Only show past reservations that started today and have already ended
       const past = sedeReservations
-        .filter((r) => 
-          r.startTime.toDate() >= todayStart && 
-          r.startTime.toDate() <= todayEnd && 
-          r.endTime.toDate() < now
+        .filter(
+          (r) =>
+            r.startTime.toDate() >= todayStart &&
+            r.startTime.toDate() <= todayEnd &&
+            r.endTime.toDate() < now
         )
-        .sort((a, b) => b.startTime.toDate().getTime() - a.startTime.toDate().getTime());
+        .sort(
+          (a, b) =>
+            b.startTime.toDate().getTime() - a.startTime.toDate().getTime()
+        );
       return { current, upcoming, past, todayCount: sedeReservations.length };
     };
-    
+
     return {
       salinha: getSalinhaData(),
-      sede: getSedeData()
+      sede: getSedeData(),
     };
   }, [todayReservations]);
 
@@ -93,11 +115,28 @@ export function Dashboard() {
             <h1 className="text-3xl font-bold text-foreground">
               Salinha Reservations
             </h1>
-            <p className="text-muted-foreground mt-1">
-              How to reservation :)
-            </p>
+            <p className="text-muted-foreground mt-1">How to reservation :)</p>
           </div>
-          <ReservationForm onSuccess={handleRefresh} />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <ReservationForm onSuccess={handleRefresh} />
+          </div>
+        </div>
+
+        {/* Summary Stats */}
+        <div className="w-full flex justify-center gap-4 mb-8">
+          <Card className="w-1/2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Total de Reservas Hoje
+              </CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{todayCount}</div>
+              <p className="text-xs text-muted-foreground">Ambas as salas</p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Room Status Cards */}
@@ -112,30 +151,39 @@ export function Dashboard() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Status</CardTitle>
-                  <div className={`w-3 h-3 rounded-full animate-pulse ${
-                    roomData.salinha.current ? "bg-primary" : "bg-green-500"
-                  }`} />
+                  <div
+                    className={`w-3 h-3 rounded-full animate-pulse ${
+                      roomData.salinha.current ? "bg-primary" : "bg-green-500"
+                    }`}
+                  />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
                     {roomData.salinha.current ? "Ocupada" : "Disponível"}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {roomData.salinha.current 
-                      ? `Até ${format(roomData.salinha.current.endTime.toDate(), "HH:mm", { locale: ptBR })}`
-                      : "Pronta para uso"
-                    }
+                    {roomData.salinha.current
+                      ? `Até ${format(
+                          roomData.salinha.current.endTime.toDate(),
+                          "HH:mm",
+                          { locale: ptBR }
+                        )}`
+                      : "Pronta para uso"}
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Reservas Hoje</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Reservas Hoje
+                  </CardTitle>
                   <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{roomData.salinha.todayCount}</div>
+                  <div className="text-2xl font-bold">
+                    {roomData.salinha.todayCount}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {roomData.salinha.upcoming.length} próximas
                   </p>
@@ -154,30 +202,39 @@ export function Dashboard() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Status</CardTitle>
-                  <div className={`w-3 h-3 rounded-full animate-pulse ${
-                    roomData.sede.current ? "bg-primary" : "bg-green-500"
-                  }`} />
+                  <div
+                    className={`w-3 h-3 rounded-full animate-pulse ${
+                      roomData.sede.current ? "bg-primary" : "bg-green-500"
+                    }`}
+                  />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
                     {roomData.sede.current ? "Ocupada" : "Disponível"}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {roomData.sede.current 
-                      ? `Até ${format(roomData.sede.current.endTime.toDate(), "HH:mm", { locale: ptBR })}`
-                      : "Pronta para uso"
-                    }
+                    {roomData.sede.current
+                      ? `Até ${format(
+                          roomData.sede.current.endTime.toDate(),
+                          "HH:mm",
+                          { locale: ptBR }
+                        )}`
+                      : "Pronta para uso"}
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Reservas Hoje</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Reservas Hoje
+                  </CardTitle>
                   <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{roomData.sede.todayCount}</div>
+                  <div className="text-2xl font-bold">
+                    {roomData.sede.todayCount}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {roomData.sede.upcoming.length} próximas
                   </p>
@@ -185,35 +242,6 @@ export function Dashboard() {
               </Card>
             </div>
           </div>
-        </div>
-
-        {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total de Reservas Hoje</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{todayCount}</div>
-              <p className="text-xs text-muted-foreground">
-                Ambas as salas
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Geral</CardTitle>
-              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalReservationsCount}</div>
-              <p className="text-xs text-muted-foreground">
-                Todas as reservas
-              </p>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Active Reservations */}
@@ -225,15 +253,15 @@ export function Dashboard() {
             </h2>
             <div className="grid gap-4">
               {roomData.salinha.current && (
-                <ReservationCard 
-                  reservation={roomData.salinha.current} 
+                <ReservationCard
+                  reservation={roomData.salinha.current}
                   onUpdate={handleRefresh}
                   showActions={true}
                 />
               )}
               {roomData.sede.current && (
-                <ReservationCard 
-                  reservation={roomData.sede.current} 
+                <ReservationCard
+                  reservation={roomData.sede.current}
                   onUpdate={handleRefresh}
                   showActions={true}
                 />
@@ -243,7 +271,8 @@ export function Dashboard() {
         )}
 
         {/* Upcoming Reservations */}
-        {(roomData.salinha.upcoming.length > 0 || roomData.sede.upcoming.length > 0) && (
+        {(roomData.salinha.upcoming.length > 0 ||
+          roomData.sede.upcoming.length > 0) && (
           <div className="mb-8">
             <h2 className="text-xl font-semibold mb-4">Próximas Hoje</h2>
             <div className="space-y-6">
@@ -286,7 +315,8 @@ export function Dashboard() {
         )}
 
         {/* Past Reservations Today */}
-        {(roomData.salinha.past.length > 0 || roomData.sede.past.length > 0) && (
+        {(roomData.salinha.past.length > 0 ||
+          roomData.sede.past.length > 0) && (
           <div className="mb-8">
             <h2 className="text-xl font-semibold mb-4">Anteriores Hoje</h2>
             <div className="space-y-6">
@@ -339,12 +369,20 @@ export function Dashboard() {
               {error || "Não foi possível conectar ao banco de dados"}
             </p>
             <div className="space-x-2">
-              <Button onClick={handleRefresh} className="cursor-pointer" variant="outline">
+              <Button
+                onClick={handleRefresh}
+                className="cursor-pointer"
+                variant="outline"
+              >
                 Tentar Novamente
               </Button>
-              <ReservationForm 
+              <ReservationForm
                 onSuccess={handleRefresh}
-                trigger={<Button className="cursor-pointer">Continuar Mesmo Assim</Button>}
+                trigger={
+                  <Button className="cursor-pointer">
+                    Continuar Mesmo Assim
+                  </Button>
+                }
               />
             </div>
           </div>
@@ -364,9 +402,10 @@ export function Dashboard() {
             <CalendarIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">Nenhuma reserva hoje</h3>
             <p className="text-muted-foreground mb-4">
-              A salinha está completamente livre hoje. Seja o primeiro a reservá-la!
+              A salinha está completamente livre hoje. Seja o primeiro a
+              reservá-la!
             </p>
-            <ReservationForm 
+            <ReservationForm
               onSuccess={handleRefresh}
               trigger={
                 <Button className="cursor-pointer">
