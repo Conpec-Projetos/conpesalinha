@@ -163,18 +163,15 @@ export function useTodayReservations() {
       });
       
       // Fetch today's reservations and total count in parallel
-      const [todayReservationsPromise, totalCountPromise] = [
+      const [todayReservationsPromise] = [
         ReservationService.getReservationsByDateOptimized(today),
-        ReservationService.getTotalReservationsCount()
       ];
       
-      const [todayReservations, totalCountResult] = await Promise.all([
+      const [todayReservations] = await Promise.all([
         Promise.race([todayReservationsPromise, timeoutPromise]) as Promise<Reservation[]>,
-        Promise.race([totalCountPromise, timeoutPromise]) as Promise<number>
       ]);
       
       setReservations(todayReservations);
-      setTotalCount(totalCountResult);
     } catch (err) {
       console.error("Error fetching today's reservations:", err);
       setError(err instanceof Error ? err.message : "Failed to fetch reservations");
@@ -225,7 +222,6 @@ export function useTodayReservations() {
 
   return {
     todayReservations: reservations,
-    totalReservationsCount: totalCount,
     loading,
     error,
     createReservation,
@@ -255,21 +251,18 @@ export function useTodayAndUpcomingReservations() {
       });
       
       // Fetch today's reservations, upcoming reservations, and total count in parallel
-      const [todayReservationsPromise, upcomingReservationsPromise, totalCountPromise] = [
+      const [todayReservationsPromise, upcomingReservationsPromise] = [
         ReservationService.getReservationsByDateOptimized(today),
         ReservationService.getUpcomingReservations(),
-        ReservationService.getTotalReservationsCount()
       ];
       
-      const [todayReservationsResult, upcomingReservationsResult, totalCountResult] = await Promise.all([
+      const [todayReservationsResult, upcomingReservationsResult] = await Promise.all([
         Promise.race([todayReservationsPromise, timeoutPromise]) as Promise<Reservation[]>,
         Promise.race([upcomingReservationsPromise, timeoutPromise]) as Promise<Reservation[]>,
-        Promise.race([totalCountPromise, timeoutPromise]) as Promise<number>
       ]);
       
       setTodayReservations(todayReservationsResult);
       setUpcomingReservations(upcomingReservationsResult);
-      setTotalCount(totalCountResult);
     } catch (err) {
       console.error("Error fetching reservations:", err);
       setError(err instanceof Error ? err.message : "Failed to fetch reservations");
@@ -322,7 +315,6 @@ export function useTodayAndUpcomingReservations() {
   return {
     todayReservations,
     upcomingReservations,
-    totalReservationsCount: totalCount,
     loading,
     error,
     createReservation,
