@@ -14,12 +14,12 @@ import { useTodayAndUpcomingReservations } from "@/hooks/useReservations";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export function Dashboard() {
-  const { 
-    todayReservations, 
+  const {
+    todayReservations,
     upcomingReservations,
-    loading, 
-    error, 
-    refetch 
+    loading,
+    error,
+    refetch,
   } = useTodayAndUpcomingReservations();
 
   // Memoize filtered reservations by room and time
@@ -42,8 +42,11 @@ export function Dashboard() {
     const salinhaReservationsToday = todayReservations.filter(
       (r) => r.room === "salinha"
     );
-    const sedeReservationsToday = todayReservations.filter((r) => r.room === "sede");
-    
+    const sedeReservationsToday = todayReservations.filter(
+      (r) => r.room === "sede"
+    );
+
+    // Filtra as próximas reservas por sala
     const salinhaUpcoming = upcomingReservations.filter(
       (r) => r.room === "salinha"
     );
@@ -53,21 +56,12 @@ export function Dashboard() {
       const current = salinhaReservationsToday.find(
         (r) => r.startTime.toDate() <= now && r.endTime.toDate() >= now
       );
-      
-      // Combine today's upcoming with all future upcoming reservations
-      const todayUpcoming = salinhaReservationsToday
-        .filter((r) => r.startTime.toDate() > now)
-        .sort(
-          (a, b) =>
-            a.startTime.toDate().getTime() - b.startTime.toDate().getTime()
-        );
-      const allUpcoming = [...todayUpcoming, ...salinhaUpcoming]
-        .sort(
-          (a, b) =>
-            a.startTime.toDate().getTime() - b.startTime.toDate().getTime()
-        );
-      
-      // Only show past reservations that started today and have already ended
+
+      const allUpcoming = [...salinhaUpcoming].sort(
+        (a, b) =>
+          a.startTime.toDate().getTime() - b.startTime.toDate().getTime()
+      );
+
       const past = salinhaReservationsToday
         .filter(
           (r) =>
@@ -79,6 +73,7 @@ export function Dashboard() {
           (a, b) =>
             b.startTime.toDate().getTime() - a.startTime.toDate().getTime()
         );
+
       return {
         current,
         upcoming: allUpcoming,
@@ -91,21 +86,14 @@ export function Dashboard() {
       const current = sedeReservationsToday.find(
         (r) => r.startTime.toDate() <= now && r.endTime.toDate() >= now
       );
-      
-      // Combine today's upcoming with all future upcoming reservations
-      const todayUpcoming = sedeReservationsToday
-        .filter((r) => r.startTime.toDate() > now)
-        .sort(
-          (a, b) =>
-            a.startTime.toDate().getTime() - b.startTime.toDate().getTime()
-        );
-      const allUpcoming = [...todayUpcoming, ...sedeUpcoming]
-        .sort(
-          (a, b) =>
-            a.startTime.toDate().getTime() - b.startTime.toDate().getTime()
-        );
-      
-      // Only show past reservations that started today and have already ended
+
+      // --- CORREÇÃO APLICADA AQUI ---
+      // Aplicamos a mesma lógica para a Sede para evitar duplicados.
+      const allUpcoming = [...sedeUpcoming].sort(
+        (a, b) =>
+          a.startTime.toDate().getTime() - b.startTime.toDate().getTime()
+      );
+
       const past = sedeReservationsToday
         .filter(
           (r) =>
@@ -117,7 +105,13 @@ export function Dashboard() {
           (a, b) =>
             b.startTime.toDate().getTime() - a.startTime.toDate().getTime()
         );
-      return { current, upcoming: allUpcoming, past, todayCount: sedeReservationsToday.length };
+        
+      return {
+        current,
+        upcoming: allUpcoming,
+        past,
+        todayCount: sedeReservationsToday.length,
+      };
     };
 
     return {
@@ -142,7 +136,9 @@ export function Dashboard() {
             <h1 className="text-3xl font-bold text-foreground">
               Salinha Reservations
             </h1>
-            <p className="text-muted-foreground mt-1">How to reservation :)</p>
+            <p className="text-muted-foreground mt-1">
+              Como reservar :)
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -179,8 +175,10 @@ export function Dashboard() {
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Status</CardTitle>
                   <div
-                    className={`w-3 h-3 rounded-full animate-ping ${
-                      roomData.salinha.current ? "bg-primary" : "bg-green-500"
+                    className={`w-3 h-3 rounded-full ${
+                      roomData.salinha.current
+                        ? "bg-primary animate-ping"
+                        : "bg-green-500"
                     }`}
                   />
                 </CardHeader>
@@ -230,8 +228,10 @@ export function Dashboard() {
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Status</CardTitle>
                   <div
-                    className={`w-3 h-3 rounded-full animate-ping ${
-                      roomData.sede.current ? "bg-primary" : "bg-green-500"
+                    className={`w-3 h-3 rounded-full ${
+                      roomData.sede.current
+                        ? "bg-primary animate-ping"
+                        : "bg-green-500"
                     }`}
                   />
                 </CardHeader>
