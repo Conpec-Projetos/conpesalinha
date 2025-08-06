@@ -234,3 +234,100 @@ export function useTodayReservations() {
     refetch: fetchData,
   };
 }
+
+export function useTodayAndUpcomingReservations() {
+  const [todayReservations, setTodayReservations] = useState<Reservation[]>([]);
+  const [upcomingReservations, setUpcomingReservations] = useState<Reservation[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const today = useMemo(() => new Date(), []);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Add a timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Request timed out")), 10000);
+      });
+      
+      // Fetch today's reservations, upcoming reservations, and total count in parallel
+      const [todayReservationsPromise, upcomingReservationsPromise, totalCountPromise] = [
+        ReservationService.getReservationsByDateOptimized(today),
+        ReservationService.getUpcomingReservations(),
+        ReservationService.getTotalReservationsCount()
+      ];
+      
+      const [todayReservationsResult, upcomingReservationsResult, totalCountResult] = await Promise.all([
+        Promise.race([todayReservationsPromise, timeoutPromise]) as Promise<Reservation[]>,
+        Promise.race([upcomingReservationsPromise, timeoutPromise]) as Promise<Reservation[]>,
+        Promise.race([totalCountPromise, timeoutPromise]) as Promise<number>
+      ]);
+      
+      setTodayReservations(todayReservationsResult);
+      setUpcomingReservations(upcomingReservationsResult);
+      setTotalCount(totalCountResult);
+    } catch (err) {
+      console.error("Error fetching reservations:", err);
+      setError(err instanceof Error ? err.message : "Failed to fetch reservations");
+      // Set empty arrays on error so the UI can show empty state
+      setTodayReservations([]);
+      setUpcomingReservations([]);
+      setTotalCount(0);
+    } finally {
+      setLoading(false);
+    }
+  }, [today]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const createReservation = async (data: Parameters<typeof ReservationService.createReservation>[0]) => {
+    try {
+      await ReservationService.createReservation(data);
+      await fetchData(); // Refresh the data
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create reservation");
+      return false;
+    }
+  };
+
+  const updateReservation = async (id: string, data: Parameters<typeof ReservationService.updateReservation>[1]) => {
+    try {
+      await ReservationService.updateReservation(id, data);
+      await fetchData(); // Refresh the data
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update reservation");
+      return false;
+    }
+  };
+
+  const deleteReservation = async (id: string) => {
+    try {
+      await ReservationService.deleteReservation(id);
+      await fetchData(); // Refresh the data
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete reservation");
+      return false;
+    }
+  };
+
+  return {
+    todayReservations,
+    upcomingReservations,
+    totalReservationsCount: totalCount,
+    loading,
+    error,
+    createReservation,
+    updateReservation,
+    deleteReservation,
+    refetch: fetchData,
+  };
+}

@@ -10,11 +10,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { ReservationForm } from "@/components/forms/ReservationForm";
 import { ReservationCard } from "@/components/layout/ReservationCard";
-import { useTodayReservations } from "@/hooks/useReservations";
+import { useTodayAndUpcomingReservations } from "@/hooks/useReservations";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export function Dashboard() {
-  const { todayReservations, loading, error, refetch } = useTodayReservations();
+  const { 
+    todayReservations, 
+    upcomingReservations, 
+    totalReservationsCount, 
+    loading, 
+    error, 
+    refetch 
+  } = useTodayAndUpcomingReservations();
 
   // Memoize filtered reservations by room and time
   const roomData = useMemo(() => {
@@ -33,23 +40,36 @@ export function Dashboard() {
       59
     );
 
-    const salinhaReservations = todayReservations.filter(
+    const salinhaReservationsToday = todayReservations.filter(
       (r) => r.room === "salinha"
     );
-    const sedeReservations = todayReservations.filter((r) => r.room === "sede");
+    const sedeReservationsToday = todayReservations.filter((r) => r.room === "sede");
+    
+    const salinhaUpcoming = upcomingReservations.filter(
+      (r) => r.room === "salinha"
+    );
+    const sedeUpcoming = upcomingReservations.filter((r) => r.room === "sede");
 
     const getSalinhaData = () => {
-      const current = salinhaReservations.find(
+      const current = salinhaReservationsToday.find(
         (r) => r.startTime.toDate() <= now && r.endTime.toDate() >= now
       );
-      const upcoming = salinhaReservations
+      
+      // Combine today's upcoming with all future upcoming reservations
+      const todayUpcoming = salinhaReservationsToday
         .filter((r) => r.startTime.toDate() > now)
         .sort(
           (a, b) =>
             a.startTime.toDate().getTime() - b.startTime.toDate().getTime()
         );
+      const allUpcoming = [...todayUpcoming, ...salinhaUpcoming]
+        .sort(
+          (a, b) =>
+            a.startTime.toDate().getTime() - b.startTime.toDate().getTime()
+        );
+      
       // Only show past reservations that started today and have already ended
-      const past = salinhaReservations
+      const past = salinhaReservationsToday
         .filter(
           (r) =>
             r.startTime.toDate() >= todayStart &&
@@ -62,24 +82,32 @@ export function Dashboard() {
         );
       return {
         current,
-        upcoming,
+        upcoming: allUpcoming,
         past,
-        todayCount: salinhaReservations.length,
+        todayCount: salinhaReservationsToday.length,
       };
     };
 
     const getSedeData = () => {
-      const current = sedeReservations.find(
+      const current = sedeReservationsToday.find(
         (r) => r.startTime.toDate() <= now && r.endTime.toDate() >= now
       );
-      const upcoming = sedeReservations
+      
+      // Combine today's upcoming with all future upcoming reservations
+      const todayUpcoming = sedeReservationsToday
         .filter((r) => r.startTime.toDate() > now)
         .sort(
           (a, b) =>
             a.startTime.toDate().getTime() - b.startTime.toDate().getTime()
         );
+      const allUpcoming = [...todayUpcoming, ...sedeUpcoming]
+        .sort(
+          (a, b) =>
+            a.startTime.toDate().getTime() - b.startTime.toDate().getTime()
+        );
+      
       // Only show past reservations that started today and have already ended
-      const past = sedeReservations
+      const past = sedeReservationsToday
         .filter(
           (r) =>
             r.startTime.toDate() >= todayStart &&
@@ -90,14 +118,14 @@ export function Dashboard() {
           (a, b) =>
             b.startTime.toDate().getTime() - a.startTime.toDate().getTime()
         );
-      return { current, upcoming, past, todayCount: sedeReservations.length };
+      return { current, upcoming: allUpcoming, past, todayCount: sedeReservationsToday.length };
     };
 
     return {
       salinha: getSalinhaData(),
       sede: getSedeData(),
     };
-  }, [todayReservations]);
+  }, [todayReservations, upcomingReservations]);
 
   const handleRefresh = () => {
     refetch();
@@ -125,7 +153,7 @@ export function Dashboard() {
 
         {/* Summary Stats */}
         <div className="w-full flex justify-center gap-4 mb-8">
-          <Card className="w-1/2">
+          <Card className="w-1/3">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Total de Reservas Hoje
@@ -152,7 +180,7 @@ export function Dashboard() {
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Status</CardTitle>
                   <div
-                    className={`w-3 h-3 rounded-full animate-pulse ${
+                    className={`w-3 h-3 rounded-full animate-ping ${
                       roomData.salinha.current ? "bg-primary" : "bg-green-500"
                     }`}
                   />
@@ -203,7 +231,7 @@ export function Dashboard() {
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Status</CardTitle>
                   <div
-                    className={`w-3 h-3 rounded-full animate-pulse ${
+                    className={`w-3 h-3 rounded-full animate-ping ${
                       roomData.sede.current ? "bg-primary" : "bg-green-500"
                     }`}
                   />
@@ -274,7 +302,7 @@ export function Dashboard() {
         {(roomData.salinha.upcoming.length > 0 ||
           roomData.sede.upcoming.length > 0) && (
           <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">Próximas Hoje</h2>
+            <h2 className="text-xl font-semibold mb-4">Próximas Reservas</h2>
             <div className="space-y-6">
               {roomData.salinha.upcoming.length > 0 && (
                 <div>

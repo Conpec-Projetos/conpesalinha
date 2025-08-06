@@ -118,6 +118,45 @@ export class ReservationService {
   }
 
   /**
+   * Get upcoming reservations from current time onwards (all future reservations)
+   */
+  static async getUpcomingReservations(): Promise<Reservation[]> {
+    try {
+      const now = new Date();
+      
+      const q = query(
+        collection(db, COLLECTION_NAME),
+        where("startTime", ">", Timestamp.fromDate(now)),
+        orderBy("startTime", "asc")
+      );
+      
+      const querySnapshot = await getDocs(q);
+      
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Reservation[];
+    } catch (error) {
+      console.error("Error fetching upcoming reservations:", error);
+      
+      // More specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes("permission-denied")) {
+          throw new Error("Database access denied. Please check Firebase security rules.");
+        }
+        if (error.message.includes("unavailable")) {
+          throw new Error("Database is temporarily unavailable. Please try again.");
+        }
+        if (error.message.includes("network")) {
+          throw new Error("Network error. Please check your internet connection.");
+        }
+      }
+      
+      throw new Error("Failed to fetch upcoming reservations. Please try again.");
+    }
+  }
+
+  /**
    * Get total count of all reservations efficiently
    */
   static async getTotalReservationsCount(): Promise<number> {
