@@ -16,8 +16,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 export function Dashboard() {
   const { 
     todayReservations, 
-    upcomingReservations, 
-    totalReservationsCount, 
+    upcomingReservations,
     loading, 
     error, 
     refetch 
@@ -153,7 +152,7 @@ export function Dashboard() {
 
         {/* Summary Stats */}
         <div className="w-full flex justify-center gap-4 mb-8">
-          <Card className="w-1/3">
+          <Card className="w-60 sm:w-2/4 md:w-1/3 lg:w-1/4">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Total de Reservas Hoje
